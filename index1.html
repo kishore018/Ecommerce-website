@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kishore Mini E-Commerce Store - Premium</title>
+<style>
+/* --- 1. Base Styles & Global Look (Modern Aesthetic) --- */
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    margin: 0; 
+    background: #f7f9fc; /* Soft gray background */
+}
+header { 
+    background: #004d99; /* Deep Blue Primary Color */
+    color: white; 
+    text-align: center; 
+    padding: 20px;
+    position: sticky; /* Make header stick */
+    top: 0;
+    z-index: 50;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+nav { text-align:center; margin:10px 0;}
+nav a { margin:0 15px; text-decoration:none; color:#004d99; font-weight:bold; transition: color 0.2s;}
+nav a:hover { color: #007bff; text-decoration:underline; }
+#cart-count { font-weight:bold; color:#dc3545; }
+
+/* --- 2. Controls & Filters --- */
+#controls-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; padding: 0 20px; margin: 15px auto; max-width: 1200px; }
+#search-bar { padding:10px; width:30%; font-size:16px; border-radius:8px; border:1px solid #ccc; transition: border-color 0.2s;}
+#search-bar:focus { border-color: #007bff; outline: none; }
+.filters { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
+.filters select, .filters input[type="text"] { padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 14px; width: 100px; }
+
+/* Responsive Adjustments for Controls */
+@media (max-width: 768px) {
+    #controls-bar { flex-direction: column; align-items: stretch; }
+    #search-bar { width: 100%; margin-bottom: 10px; }
+    .filters { flex-wrap: wrap; justify-content: center; }
+}
+
+/* --- 3. Product Grid --- */
+.products { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:20px; padding:20px; max-width: 1200px; margin: 0 auto;}
+.product { 
+    background: white; 
+    padding: 15px; 
+    border-radius: 12px; 
+    text-align: center; 
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.08); 
+    transition: transform 0.3s, box-shadow 0.3s; 
+    cursor: pointer;
+    position: relative;
+}
+.product:hover { 
+    transform: translateY(-5px); 
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.15); 
+}
+.product img { width:100%; height:180px; object-fit:cover; border-radius:8px; margin-bottom: 10px;}
+.product h3 { font-size:18px; margin:10px 0 5px; }
+.product p { margin:5px 0; color:#555; }
+.rating { color: gold; font-size: 1.1em; margin-bottom: 5px; }
+
+.product button { 
+    padding: 10px 20px; 
+    background: #009688; /* Teal/Accent color */
+    color: white; 
+    border: none; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    margin-top: 8px;
+    transition: background 0.2s;
+}
+.product button:hover { background:#00796b; }
+.out-of-stock { background: #dc3545 !important; cursor: not-allowed !important; }
+
+/* --- 4. Modals (Cart & Checkout) --- */
+.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
+.modal-content { background-color: #fefefe; margin: 10% auto; padding: 25px; border: 1px solid #ddd; width: 90%; max-width: 800px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);}
+@media (max-width: 600px) {
+    .modal-content { margin: 5% auto; width: 95%; padding: 15px; }
+}
+.close { color: #aaa; float: right; font-size: 32px; font-weight: bold; }
+.close:hover, .close:focus { color: #000; text-decoration: none; cursor: pointer; }
+
+/* Cart Modal Specific */
+#cart-items-list li { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 12px 0; font-size: 1.1em;}
+.cart-qty-controls button { background: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+#cart-checkout-btn, #cart-clear-btn { 
+    padding: 12px 20px; 
+    background: #007bff; 
+    color: white; 
+    border: none; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    margin-top: 15px; 
+    width: 48%; /* Split width */
+    font-size: 1.1em;
+}
+#cart-clear-btn { background: #dc3545; float: right; }
+#cart-actions { display: flex; justify-content: space-between; margin-top: 10px; }
+
+/* Checkout Modal Specific */
+#checkout-modal input, #checkout-modal select { 
+    width: 100%; padding: 14px; margin: 12px 0; border-radius: 8px; 
+    border: 1px solid #ccc; box-sizing: border-box; font-size: 16px;
+    transition: border-color 0.2s;
+}
+#checkout-modal input:focus, #checkout-modal select:focus { border-color: #007bff; outline: none; box-shadow: 0 0 5px rgba(0, 123, 255, 0.2); }
+#checkout-modal button { 
+    width: 100%; margin-top: 25px; padding: 18px 20px; 
+    font-size: 1.4em; background: #28a745; 
+    border-radius: 8px; border: none; color: white;
+    transition: background 0.2s;
+}
+#checkout-modal button:hover { background: #218838; }
+
+/* --- 5. Toast Notifications --- */
+#toast-message {
+    visibility: hidden; 
+    min-width: 250px; 
+    background-color: #333; 
+    color: #fff; 
+    text-align: center; 
+    border-radius: 8px; 
+    padding: 16px; 
+    position: fixed; 
+    z-index: 2000; 
+    right: 30px; 
+    top: 30px; 
+    font-size: 17px;
+    opacity: 0;
+    transition: opacity 0.5s, transform 0.5s;
+    transform: translateY(-50px);
+}
+#toast-message.show {
+    visibility: visible; 
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* --- 6. My Orders --- */
+#recent-orders .order-item { border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; border-radius: 10px; background: #fff;}
+
+</style>
+</head>
+<body>
+
+<header>
+<h1>Kishore Mini E-Commerce Store</h1>
+<p>Shop Premium Electronics, Appliances & More!</p>
+</header>
+
+<nav>
+<a href="#" id="home-link">Home</a>
+<a href="#" id="cart-link">Cart (<span id="cart-count">0</span>)</a>
+<a href="#" id="recent-orders-link">My Orders</a>
+</nav>
+
+<div id="controls-bar">
+    <input type="text" id="search-bar" placeholder="Search products...">
+    <div class="filters">
+        <select id="category-filter">
+            <option value="all">All Categories</option>
+            </select>
+        <select id="sort-filter">
+            <option value="default">Sort By</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+        </select>
+        <input type="text" id="min-price" placeholder="Min Price">
+        <input type="text" id="max-price" placeholder="Max Price">
+    </div>
+</div>
+
+<div class="products" id="product-list"></div>
+<div id="recent-orders"></div>
+
+
+<div id="product-detail-modal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('product-detail-modal')">&times;</span>
+    <div id="product-detail-modal-content">
+        </div>
+  </div>
+</div>
+
+<div id="cart-modal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('cart-modal')">&times;</span>
+    <h2>Your Shopping Cart</h2>
+    <ul id="cart-items-list">
+        </ul>
+    <div id="cart-summary"></div>
+    <div id="cart-actions">
+        <button id="cart-checkout-btn" disabled>Proceed to Checkout</button>
+        <button id="cart-clear-btn" disabled>Clear Cart</button>
+    </div>
+  </div>
+</div>
+
+<div id="checkout-modal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('checkout-modal')">&times;</span>
+    <h2>Checkout Details</h2>
+    <p>Please enter your shipping and contact details.</p>
+    
+    <input type="text" id="checkout-name" placeholder="Full Name" required>
+    <input type="tel" id="checkout-mobile" placeholder="Mobile Number (10 digits)" required maxlength="10">
+    <input type="text" id="checkout-pincode" placeholder="Pincode (6 digits)" required maxlength="6">
+    <input type="text" id="checkout-address" placeholder="Full Shipping Address" required>
+    
+    <select id="checkout-payment-method">
+        <option value="COD">Cash on Delivery</option>
+        <option value="CARD">Credit/Debit Card (Mock)</option>
+    </select>
+    <button id="place-order-btn">Place Order</button>
+  </div>
+</div>
+
+<div id="toast-message">Item added to cart!</div>
+
+
+<script>
+  // --- Data & Initialization ---
+  const allProducts = [
+    // --- Laptops (10) ---
+    { id: 1, name: "Laptop 1", category: "Laptop", price: 59999, image: "images/laptop1.jpeg", specs: "Core i5, 8GB RAM, 256GB SSD", rating: 4.5, inStock: true },
+    { id: 2, name: "Laptop 2", category: "Laptop", price: 64999, image: "images/laptop2.jpeg", specs: "Core i7, 16GB RAM, 512GB SSD", rating: 4.8, inStock: true },
+    { id: 3, name: "Apple Macbook air1", category: "Laptop", price: 69999, image: "images/laptop3.jpeg", specs: "M1 Chip, 8GB RAM, 256GB SSD", rating: 4.9, inStock: true },
+    { id: 4, name: "Laptop 4", category: "Laptop", price: 74999, image: "images/laptop4.jpeg", specs: "Core i7, 16GB RAM, 1TB SSD", rating: 4.2, inStock: false }, // Out of Stock
+    { id: 5, name: "Laptop 5", category: "Laptop", price: 79999, image: "images/laptop2.jpeg", specs: "Gaming Laptop, 16GB RAM", rating: 4.6, inStock: true },
+    { id: 6, name: "Laptop 6", category: "Laptop", price: 82999, image: "images/laptop1.jpeg", specs: "Thin and Light, 1TB SSD", rating: 4.1, inStock: true },
+    { id: 7, name: "Apple Macbook air2", category: "Laptop", price: 85999, image: "images/laptop3.jpeg", specs: "M2 Chip, 16GB RAM, 512GB SSD", rating: 5.0, inStock: true },
+    { id: 8, name: "Laptop 8", category: "Laptop", price: 89999, image: "images/laptop4.jpeg", specs: "High Performance, 32GB RAM", rating: 4.4, inStock: true },
+    { id: 9, name: "Laptop 9", category: "Laptop", price: 93999, image: "images/laptop1.jpeg", specs: "Premium Design, 1TB SSD", rating: 4.7, inStock: true },
+    { id: 10, name: "Laptop 10", category: "Laptop", price: 97999, image: "images/laptop4.jpeg", specs: "Flagship Model, 32GB RAM", rating: 4.8, inStock: true },
+    
+    // --- Smartphones (10) ---
+    { id: 11, name: "Smartphone 1", category: "Smartphone", price: 24999, image: "images/mobile1.jpeg", specs: "6.1 inch, 128GB, 48MP Camera", rating: 4.1, inStock: true },
+    { id: 12, name: "Smartphone 2", category: "Smartphone", price: 26999, image: "images/mobile2.jpeg", specs: "6.5 inch, 256GB, 64MP Camera", rating: 4.6, inStock: true },
+    { id: 13, name: "Smartphone 3", category: "Smartphone", price: 28999, image: "images/mobile3.jpeg", specs: "AMOLED Display, Fast Charger", rating: 4.7, inStock: true },
+    { id: 14, name: "Smartphone 4", category: "Smartphone", price: 31999, image: "images/mobile4.jpeg", specs: "5G Enabled, Large Battery", rating: 4.2, inStock: true },
+    { id: 15, name: "Smartphone 5", category: "Smartphone", price: 34999, image: "images/mobile2.jpeg", specs: "Pro Camera System", rating: 4.5, inStock: true },
+    { id: 16, name: "Smartphone 6", category: "Smartphone", price: 36999, image: "images/mobile4.jpeg", specs: "Snapdragon Processor", rating: 4.3, inStock: true },
+    { id: 17, name: "Smartphone 7", category: "Smartphone", price: 39999, image: "images/mobile1.jpeg", specs: "Compact Design, 128GB", rating: 4.9, inStock: true },
+    { id: 18, name: "Smartphone 8", category: "Smartphone", price: 42999, image: "images/mobile3.jpeg", specs: "High Refresh Rate Screen", rating: 4.0, inStock: true },
+    { id: 19, name: "Smartphone 9", category: "Smartphone", price: 45999, image: "images/mobile4.jpeg", specs: "Latest Model, 512GB", rating: 4.6, inStock: true },
+    { id: 20, name: "Smartphone 10", category: "Smartphone", price: 49999, image: "images/mobile2.jpeg", specs: "Premium Build, 1TB Storage", rating: 4.8, inStock: true },
+    
+    // --- TVs (10) ---
+    { id: 21, name: "Smart TV 1", category: "TV", price: 35999, image: "images/tv1.jpeg", specs: "43 inch, 4K UHD, Smart Features", rating: 4.0, inStock: true },
+    { id: 22, name: "Smart TV 2", category: "TV", price: 37999, image: "images/tv2.jpeg", specs: "55 inch, 4K UHD, HDR", rating: 4.7, inStock: true },
+    { id: 23, name: "Smart TV 3", category: "TV", price: 40999, image: "images/tv3.jpeg", specs: "65 inch, OLED Display", rating: 4.8, inStock: true },
+    { id: 24, name: "Smart TV 4", category: "TV", price: 42999, image: "images/tv1.jpeg", specs: "50 inch, QLED, Android TV", rating: 4.3, inStock: true },
+    { id: 25, name: "Smart TV 5", category: "TV", price: 45999, image: "images/tv2.jpeg", specs: "75 inch, Dolby Vision", rating: 4.9, inStock: true },
+    { id: 26, name: "Smart TV 6", category: "TV", price: 47999, image: "images/tv3.jpeg", specs: "4K, Voice Remote", rating: 4.1, inStock: true },
+    { id: 27, name: "Smart TV 7", category: "TV", price: 49999, image: "images/tv1.jpeg", specs: "85 inch, Slim Bezel", rating: 4.4, inStock: true },
+    { id: 28, name: "Smart TV 8", category: "TV", price: 52999, image: "images/tv2.jpeg", specs: "High Contrast Ratio", rating: 4.6, inStock: true },
+    { id: 29, name: "Smart TV 9", category: "TV", price: 54999, image: "images/tv3.jpeg", specs: "Gaming Features", rating: 4.7, inStock: true },
+    { id: 30, name: "Smart TV 10", category: "TV", price: 57999, image: "images/tv1.jpeg", specs: "Flagship QLED Model", rating: 4.5, inStock: true },
+    
+    // --- ACs (10) ---
+    { id: 31, name: "AC 1", category: "AC", price: 29999, image: "images/ac1.jpeg", specs: "1.5 Ton, 3 Star, Inverter", rating: 3.9, inStock: true },
+    { id: 32, name: "AC 2", category: "AC", price: 31999, image: "images/ac2.jpeg", specs: "1.5 Ton, 5 Star, Dual Inverter", rating: 4.6, inStock: true },
+    { id: 33, name: "AC 3", category: "AC", price: 33999, image: "images/ac3.jpeg", specs: "2.0 Ton, 3 Star, Wi-Fi", rating: 4.1, inStock: true },
+    { id: 34, name: "AC 4", category: "AC", price: 35999, image: "images/ac1.jpeg", specs: "1.0 Ton, 5 Star, Anti-Bacterial Filter", rating: 4.8, inStock: true },
+    { id: 35, name: "AC 5", category: "AC", price: 37999, image: "images/ac2.jpeg", specs: "2.0 Ton, 5 Star, Inverter", rating: 4.2, inStock: true },
+    { id: 36, name: "AC 6", category: "AC", price: 39999, image: "images/ac3.jpeg", specs: "1.5 Ton, Smart AC", rating: 4.7, inStock: true },
+    { id: 37, name: "AC 7", category: "AC", price: 41999, image: "images/ac1.jpeg", specs: "Silent Operation", rating: 4.4, inStock: true },
+    { id: 38, name: "AC 8", category: "AC", price: 43999, image: "images/ac2.jpeg", specs: "Heavy Duty Cooling", rating: 4.5, inStock: true },
+    { id: 39, name: "AC 9", category: "AC", price: 45999, image: "images/ac3.jpeg", specs: "Energy Efficient Model", rating: 4.9, inStock: true },
+    { id: 40, name: "AC 10", category: "AC", price: 47999, image: "images/ac1.jpeg", specs: "Top-end Inverter AC", rating: 4.3, inStock: true },
+
+    // --- Fridges (10) ---
+    { id: 41, name: "Fridge 1", category: "Appliance", price: 25999, image: "images/fridge1.jpeg", specs: "300L, Double Door, Frost-Free", rating: 4.4, inStock: false }, // Out of Stock
+    { id: 42, name: "Fridge 2", category: "Appliance", price: 27999, image: "images/fridge2.jpeg", specs: "350L, Bottom Freezer", rating: 4.3, inStock: true },
+    { id: 43, name: "Fridge 3", category: "Appliance", price: 29999, image: "images/fridge3.jpeg", specs: "400L, Side-by-Side", rating: 4.8, inStock: true },
+    { id: 44, name: "Fridge 4", category: "Appliance", price: 31999, image: "images/fridge4.jpeg", specs: "250L, Single Door, Direct Cool", rating: 4.0, inStock: true },
+    { id: 45, name: "Fridge 5", category: "Appliance", price: 33999, image: "images/fridge3.jpeg", specs: "500L, Multi-Door", rating: 4.6, inStock: true },
+    { id: 46, name: "Fridge 6", category: "Appliance", price: 35999, image: "images/fridge1.jpeg", specs: "Inverter Compressor", rating: 4.7, inStock: true },
+    { id: 47, name: "Fridge 7", category: "Appliance", price: 37999, image: "images/fridge2.jpeg", specs: "Smart Diagnosis", rating: 4.2, inStock: true },
+    { id: 48, name: "Fridge 8", category: "Appliance", price: 39999, image: "images/fridge4.jpeg", specs: "Premium Glass Finish", rating: 4.5, inStock: true },
+    { id: 49, name: "Fridge 9", category: "Appliance", price: 41999, image: "images/fridge2.jpeg", specs: "Water Dispenser", rating: 4.9, inStock: true },
+    { id: 50, name: "Fridge 10", category: "Appliance", price: 43999, image: "images/fridge1.jpeg", specs: "Flagship Model", rating: 4.1, inStock: true },
+
+    // --- Washing Machines (10) ---
+    { id: 51, name: "Washing Machine 1", category: "Appliance", price: 28999, image: "images/washing1.jpeg", specs: "8kg, Fully Automatic, Front Load", rating: 4.3, inStock: true },
+    { id: 52, name: "Washing Machine 2", category: "Appliance", price: 31999, image: "images/washing2.jpeg", specs: "7kg, Top Load, Inverter", rating: 4.0, inStock: true },
+    { id: 53, name: "Washing Machine 3", category: "Appliance", price: 34999, image: "images/washing3.jpeg", specs: "9kg, Fully Automatic", rating: 4.6, inStock: true },
+    { id: 54, name: "Washing Machine 4", category: "Appliance", price: 37999, image: "images/washing4.jpeg", specs: "10kg, Front Load", rating: 4.8, inStock: true },
+    { id: 55, name: "Washing Machine 5", category: "Appliance", price: 40999, image: "images/washing2.jpeg", specs: "Dryer Combo", rating: 4.2, inStock: true },
+    { id: 56, name: "Washing Machine 6", category: "Appliance", price: 43999, image: "images/washing4.jpeg", specs: "Steam Wash", rating: 4.5, inStock: true },
+    { id: 57, name: "Washing Machine 7", category: "Appliance", price: 46999, image: "images/washing1.jpeg", specs: "Wi-Fi Enabled", rating: 4.7, inStock: true },
+    { id: 58, name: "Washing Machine 8", category: "Appliance", price: 49999, image: "images/washing3.jpeg", specs: "Quick Wash Feature", rating: 4.4, inStock: true },
+    { id: 59, name: "Washing Machine 9", category: "Appliance", price: 52999, image: "images/washing4.jpeg", specs: "Large Capacity", rating: 4.9, inStock: true },
+    { id: 60, name: "Washing Machine 10", category: "Appliance", price: 55999, image: "images/washing1.jpeg", specs: "Premium Build", rating: 4.1, inStock: true },
+
+    // --- Headphones (10) ---
+    { id: 61, name: "Headphone 1", category: "Accessory", price: 1999, image: "images/head1.jpeg", specs: "Wireless, 20-hour battery life", rating: 4.7, inStock: true },
+    { id: 62, name: "Headphone 2", category: "Accessory", price: 2499, image: "images/head2.jpeg", specs: "Over-ear, Noise Cancellation", rating: 4.9, inStock: true },
+    { id: 63, name: "Headphone 3", category: "Accessory", price: 2999, image: "images/head3.jpeg", specs: "TWS, IPX4 Rated", rating: 4.6, inStock: true },
+    { id: 64, name: "Headphone 4", category: "Accessory", price: 3499, image: "images/head4.jpeg", specs: "Gaming Headset, Mic", rating: 4.0, inStock: true },
+    { id: 65, name: "Headphone 5", category: "Accessory", price: 3999, image: "images/head3.jpeg", specs: "Long Battery Life", rating: 4.3, inStock: true },
+    { id: 66, name: "Headphone 6", category: "Accessory", price: 4499, image: "images/head4.jpeg", specs: "Comfortable Earpads", rating: 4.8, inStock: true },
+    { id: 67, name: "Headphone 7", category: "Accessory", price: 4999, image: "images/head1.jpeg", specs: "High-Fidelity Audio", rating: 4.1, inStock: true },
+    { id: 68, name: "Headphone 8", category: "Accessory", price: 5499, image: "images/head2.jpeg", specs: "Premium Design", rating: 4.5, inStock: true },
+    { id: 69, name: "Headphone 9", category: "Accessory", price: 5999, image: "images/head3.jpeg", specs: "Active Noise Cancellation", rating: 4.7, inStock: true },
+    { id: 70, name: "Headphone 10", category: "Accessory", price: 6499, image: "images/head1.jpeg", specs: "Top-tier Sound", rating: 4.4, inStock: true },
+
+    // --- Other Appliances (20) - Mixers and Miscellaneous ---
+    
+   
+    // --- Mixers (10) - For a total of 100 products ---
+    { id: 91, name: "Mixer 1", category: "Appliance", price: 2999, image: "images/mixer1.jpeg", specs: "750W Motor, 3 Jars", rating: 4.5, inStock: true },
+    { id: 92, name: "Mixer 2", category: "Appliance", price: 3499, image: "images/mixer2.jpeg", specs: "1000W Motor, 4 Jars", rating: 4.4, inStock: true },
+    { id: 93, name: "Mixer 3", category: "Appliance", price: 3999, image: "images/mixer3.jpeg", specs: "Blender Attachment", rating: 4.6, inStock: true },
+    { id: 94, name: "Mixer 4", category: "Appliance", price: 4499, image: "images/mixer4.jpeg", specs: "Juicer Mixer Grinder", rating: 4.9, inStock: true },
+    { id: 95, name: "Mixer 5", category: "Appliance", price: 4999, image: "images/mixer2.jpeg", specs: "Heavy Duty, Metal Body", rating: 4.1, inStock: true },
+    { id: 96, name: "Mixer 6", category: "Appliance", price: 5499, image: "images/mixer4.jpeg", specs: "Automatic Operation", rating: 4.7, inStock: true },
+    { id: 97, name: "Mixer 7", category: "Appliance", price: 5999, image: "images/mixer1.jpeg", specs: "Stylish Design", rating: 4.3, inStock: true },
+    { id: 98, name: "Mixer 8", category: "Appliance", price: 6499, image: "images/mixer3.jpeg", specs: "Multiple Speed Settings", rating: 4.8, inStock: true },
+    { id: 99, name: "Mixer 9", category: "Appliance", price: 6999, image: "images/mixer4.jpeg", specs: "Silent Operation", rating: 4.2, inStock: true },
+    { id: 100, name: "Mixer 10", category: "Appliance", price: 7499, image: "images/mixer1.jpeg", specs: "Top-rated Model", rating: 4.5, inStock: true }
+  ];
+
+
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+  let orders = JSON.parse(localStorage.getItem("orders")) || [];
+  updateCartCount();
+
+  // --- Element References ---
+  const productList = document.getElementById("product-list");
+  const searchBar = document.getElementById("search-bar");
+  const recentOrdersDiv = document.getElementById("recent-orders");
+  const categoryFilter = document.getElementById("category-filter");
+  const sortFilter = document.getElementById("sort-filter");
+  const minPriceInput = document.getElementById("min-price");
+  const maxPriceInput = document.getElementById("max-price");
+  const cartCheckoutBtn = document.getElementById("cart-checkout-btn");
+  const cartClearBtn = document.getElementById("cart-clear-btn");
+  const toastMessage = document.getElementById("toast-message");
+
+
+  // --- Utility Functions ---
+  const getProductById = (id) => allProducts.find(p => p.id === id);
+  const getCategories = () => [...new Set(allProducts.map(p => p.category))].sort();
+  const formatPrice = (price) => `₹${price.toLocaleString('en-IN')}`;
+  
+  // --- Toast Notification Function ---
+  function showToast(message) {
+    toastMessage.innerText = message;
+    toastMessage.classList.add('show');
+    setTimeout(() => {
+        toastMessage.classList.remove('show');
+    }, 3000); 
+  }
+
+  // --- Product Display ---
+  function displayRating(rating) {
+      if (!rating) return '';
+      const fullStar = '★'; 
+      const emptyStar = '☆';
+      const numFull = Math.floor(rating);
+      let stars = fullStar.repeat(numFull);
+      if (rating % 1 >= 0.5) stars += '½'; 
+      stars += emptyStar.repeat(5 - stars.length);
+      return `<div class="rating">${stars} (${rating})</div>`;
+  }
+
+  function displayProducts(list){
+    productList.innerHTML = "";
+    if (list.length === 0) {
+        productList.innerHTML = "<p style='text-align:center; width:100%; grid-column: 1 / -1;'>No products found matching your criteria.</p>";
+        return;
+    }
+    list.forEach(p=>{
+      const div = document.createElement("div");
+      div.className = "product";
+      div.setAttribute('onclick', `showProductDetail(${p.id})`);
+      
+      const buttonText = p.inStock ? "Add to Cart" : "Out of Stock";
+      const buttonClass = p.inStock ? "" : "out-of-stock";
+
+      div.innerHTML = `
+        <img src="${p.image}" alt="${p.name}" onerror="this.onerror=null; this.src='https://via.placeholder.com/180x180?text=Image+Missing'">
+        <h3>${p.name}</h3>
+        ${displayRating(p.rating)}
+        <p><b>${formatPrice(p.price)}</b></p>
+        <button class="${buttonClass}" 
+                onclick="event.stopPropagation(); ${p.inStock ? `addToCart(${p.id})` : `showToast('This product is currently out of stock.')`}"
+                ${p.inStock ? '' : 'disabled'}>
+            ${buttonText}
+        </button>
+      `;
+      productList.appendChild(div);
+    });
+  }
+
+  // --- Filtering and Sorting ---
+  function applyFiltersAndSort() {
+    const query = searchBar.value.toLowerCase();
+    const selectedCategory = categoryFilter.value;
+    const selectedSort = sortFilter.value;
+    const minPrice = parseFloat(minPriceInput.value) || 0;
+    const maxPrice = parseFloat(maxPriceInput.value) || Infinity;
+
+    // 1. Filter
+    let filtered = allProducts.filter(p => 
+      p.name.toLowerCase().includes(query) && 
+      (selectedCategory === 'all' || p.category === selectedCategory) &&
+      p.price >= minPrice &&
+      p.price <= maxPrice
+    );
+
+    // 2. Sort
+    if (selectedSort === 'price-asc') {
+        filtered.sort((a, b) => a.price - b.price);
+    } else if (selectedSort === 'price-desc') {
+        filtered.sort((a, b) => b.price - a.price);
+    }
+
+    displayProducts(filtered);
+  }
+
+  // Populate category filter dropdown
+  getCategories().forEach(cat => {
+      const option = document.createElement('option');
+      option.value = cat;
+      option.textContent = cat;
+      categoryFilter.appendChild(option);
+  });
+
+  // Attach event listeners to all filter/sort controls
+  searchBar.addEventListener("input", applyFiltersAndSort);
+  categoryFilter.addEventListener("change", applyFiltersAndSort);
+  sortFilter.addEventListener("change", applyFiltersAndSort);
+  minPriceInput.addEventListener("input", applyFiltersAndSort);
+  maxPriceInput.addEventListener("input", applyFiltersAndSort);
+  
+  // Initial display
+  displayProducts(allProducts);
+
+  // --- Cart Management ---
+  function updateCartCount(){
+    const count = cart.reduce((sum,i)=>sum+(i.qty||1),0);
+    document.getElementById("cart-count").innerText = count;
+  }
+
+  function addToCart(id){
+    const product = getProductById(id);
+    if (!product.inStock) {
+        showToast("Error: Item is out of stock!");
+        return;
+    }
+    const existing = cart.find(item=>item.id===id);
+    if(existing) existing.qty +=1;
+    else cart.push({...product, qty:1});
+    localStorage.setItem("cart", JSON.stringify(cart));
+    updateCartCount();
+    showToast(`${product.name} added to cart!`); 
+  }
+  
+  // Clear Cart Function
+  function clearCart() {
+      if (confirm("Are you sure you want to clear your entire cart?")) {
+          cart = [];
+          localStorage.setItem("cart", JSON.stringify(cart));
+          updateCartCount();
+          renderCart();
+          showToast("Cart has been cleared.");
+      }
+  }
+  cartClearBtn.addEventListener("click", clearCart);
+
+
+  function removeItem(id){ 
+      cart = cart.filter(item => item.id !== id);
+      localStorage.setItem("cart", JSON.stringify(cart));
+      renderCart(); 
+      updateCartCount(); 
+  }
+  function increaseQty(id){ 
+      const item = cart.find(i => i.id === id);
+      if (item) item.qty += 1;
+      localStorage.setItem("cart", JSON.stringify(cart));
+      renderCart(); 
+      updateCartCount(); 
+  }
+  function decreaseQty(id){ 
+      const itemIndex = cart.findIndex(i => i.id === id);
+      if (itemIndex > -1) {
+          if (cart[itemIndex].qty > 1) cart[itemIndex].qty -= 1; 
+          else removeItem(id);
+          localStorage.setItem("cart", JSON.stringify(cart));
+      }
+      renderCart(); 
+      updateCartCount(); 
+  }
+
+  function calculateCartTotal() {
+    return cart.reduce((total, item) => total + (item.price * item.qty), 0);
+  }
+  
+  function renderCart(){
+    const cartList = document.getElementById("cart-items-list");
+    const cartSummary = document.getElementById("cart-summary");
+    
+    cartList.innerHTML = "";
+    
+    if(cart.length===0){
+        cartList.innerHTML = "<li>Your cart is empty. <a href='#' onclick='closeModal(\"cart-modal\"); showHomeView()'>Start shopping!</a></li>";
+        cartSummary.innerHTML = "Total: ₹0";
+        cartCheckoutBtn.disabled = true;
+        cartClearBtn.disabled = true;
+        return;
+    }
+
+    cart.forEach(item=>{
+      const li = document.createElement("li");
+      const subtotal = item.price * item.qty;
+      li.innerHTML = `
+        <span>${item.name}</span>
+        <div class="cart-qty-controls">
+            <button onclick="decreaseQty(${item.id})">-</button>
+            <span>${item.qty}</span>
+            <button onclick="increaseQty(${item.id})">+</button>
+        </div>
+        <span>${formatPrice(subtotal)}</span>
+        <button style="background: #dc3545;" onclick="removeItem(${item.id})">Remove</button>
+      `;
+      cartList.appendChild(li);
+    });
+
+    const total = calculateCartTotal();
+    cartSummary.innerHTML = `Total: ${formatPrice(total)}`;
+    cartCheckoutBtn.disabled = false;
+    cartClearBtn.disabled = false;
+  }
+
+  // --- Modal Functions ---
+  function openModal(modalId) {
+    document.getElementById(modalId).style.display = 'block';
+  }
+
+  function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+  }
+
+  window.onclick = function(event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = "none";
+    }
+  }
+
+
+  // --- Product Detail Modal ---
+  function showProductDetail(id) {
+    const product = getProductById(id);
+    const content = document.getElementById('product-detail-modal-content');
+    
+    content.innerHTML = `
+        <img src="${product.image}" alt="${product.name}" onerror="this.onerror=null; this.src='https://via.placeholder.com/400x400?text=Image+Missing'">
+        <div id="product-detail-info">
+            <h2>${product.name}</h2>
+            ${displayRating(product.rating)}
+            <p><strong>Category:</strong> ${product.category}</p>
+            <h3>Price: ${formatPrice(product.price)}</h3>
+            <p><strong>Specifications:</strong> ${product.specs || "No specifications provided."}</p>
+            <button ${product.inStock ? '' : 'disabled class="out-of-stock"'}
+                onclick="${product.inStock ? `addToCart(${product.id}); closeModal('product-detail-modal')` : `showToast('Item is out of stock')`}">
+                ${product.inStock ? 'Add to Cart' : 'Out of Stock'}
+            </button>
+        </div>
+    `;
+    openModal('product-detail-modal');
+  }
+
+
+  // --- Checkout and Order Logic ---
+  document.getElementById("cart-checkout-btn").addEventListener("click", () => {
+      closeModal('cart-modal');
+      openModal('checkout-modal');
+  });
+
+  document.getElementById("place-order-btn").addEventListener("click", () => {
+    const name = document.getElementById("checkout-name").value.trim();
+    const address = document.getElementById("checkout-address").value.trim();
+    const mobile = document.getElementById("checkout-mobile").value.trim();
+    const pincode = document.getElementById("checkout-pincode").value.trim();
+    const payment = document.getElementById("checkout-payment-method").value;
+    
+    // Validation
+    if (!name || !address || !mobile || !pincode) {
+        showToast("Error: Please fill in all required fields.");
+        return;
+    }
+    if (mobile.length !== 10 || isNaN(mobile) || pincode.length !== 6 || isNaN(pincode)) {
+        showToast("Error: Please ensure Mobile Number is 10 digits and Pincode is 6 digits.");
+        return;
+    }
+
+    // Calculate Estimated Delivery Date (3-5 days from now)
+    const today = new Date();
+    const deliveryDate = new Date();
+    deliveryDate.setDate(today.getDate() + 5); 
+    const estimatedDelivery = deliveryDate.toLocaleDateString();
+
+    const newOrder = {
+        id: Date.now(),
+        date: new Date().toLocaleString(),
+        items: [...cart],
+        total: calculateCartTotal(),
+        name: name,
+        address: address,
+        mobile: mobile,
+        pincode: pincode,
+        payment: payment,
+        delivery: estimatedDelivery 
+    };
+
+    orders.push(newOrder);
+    localStorage.setItem("orders", JSON.stringify(orders));
+    
+    // Clear cart
+    cart = [];
+    localStorage.setItem("cart", JSON.stringify(cart));
+    updateCartCount();
+    
+    closeModal('checkout-modal');
+    showToast(`Order Placed! Estimated Delivery: ${estimatedDelivery}`); 
+    
+    showOrdersView();
+  });
+
+
+  // --- Recent Orders View ---
+  function renderRecentOrders(){
+    recentOrdersDiv.innerHTML = "<h2>Your Recent Orders</h2>"; 
+    
+    if(orders.length===0){ 
+        recentOrdersDiv.innerHTML+="<p>No recent orders found. Place an order to see it here!</p>"; 
+        return; 
+    }
+    
+    orders.slice().reverse().forEach((o,idx)=>{
+      let itemsHtml="";
+      o.items.forEach(i=>{ 
+          itemsHtml+=`<li>${i.name} - ${formatPrice(i.price)} x ${i.qty}</li>`; 
+      });
+      
+      const orderNumber = orders.length - idx; 
+      const div = document.createElement("div");
+      div.className = "order-item";
+      div.innerHTML=`
+        <p>
+          <b>Order ${orderNumber}</b> placed on: ${o.date}
+          <br>Customer Name: <b>${o.name}</b>
+          <br>Total Amount: <b>${formatPrice(o.total)}</b>
+          <br>Shipping Address: ${o.address} (Pincode: ${o.pincode})
+          <br>Contact: ${o.mobile}
+          <br>Payment Method: ${o.payment}
+          <br>Estimated Delivery: <b style="color: #009688;">${o.delivery}</b>
+        </p>
+        <p><b>Items:</b></p>
+        <ul>${itemsHtml}</ul>
+      `;
+      recentOrdersDiv.appendChild(div);
+    });
+  }
+
+  // --- View Switching ---
+  function showHomeView() {
+    productList.style.display = 'grid'; 
+    document.getElementById("controls-bar").style.display = 'flex';
+    recentOrdersDiv.style.display = 'none'; 
+  }
+  
+  function showOrdersView() {
+    productList.style.display = 'none';
+    document.getElementById("controls-bar").style.display = 'none';
+    recentOrdersDiv.style.display = 'block'; 
+    renderRecentOrders();
+  }
+
+
+  // --- Navigation Event Listeners ---
+  document.getElementById("recent-orders-link").addEventListener("click", (e) => {
+    e.preventDefault(); 
+    showOrdersView();
+    closeModal('cart-modal');
+    closeModal('product-detail-modal');
+    closeModal('checkout-modal');
+  });
+
+  document.getElementById("home-link").addEventListener("click", (e) => {
+    e.preventDefault(); 
+    showHomeView();
+    closeModal('cart-modal');
+    closeModal('product-detail-modal');
+    closeModal('checkout-modal');
+  });
+  
+  document.getElementById("cart-link").addEventListener("click", (e) => {
+      e.preventDefault();
+      renderCart();
+      openModal('cart-modal');
+      showHomeView();
+      closeModal('product-detail-modal');
+      closeModal('checkout-modal');
+  });
+  
+</script>
+
+</body>
+</html>
